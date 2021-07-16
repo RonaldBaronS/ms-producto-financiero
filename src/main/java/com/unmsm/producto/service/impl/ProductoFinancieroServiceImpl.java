@@ -4,20 +4,16 @@ import com.unmsm.producto.dao.ProductoFinancieroDao;
 import com.unmsm.producto.dao.entity.DepositoPlazoFijoLima;
 import com.unmsm.producto.model.RegistrarBaseRequest;
 import com.unmsm.producto.service.ProductoFinancieroService;
-import com.unmsm.producto.util.ProductoFinancieroConstante;
-
 import lombok.extern.slf4j.Slf4j;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.TimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -42,7 +38,9 @@ public class ProductoFinancieroServiceImpl implements ProductoFinancieroService 
             DepositoPlazoFijoLima entity = new DepositoPlazoFijoLima();
             entity.setEntidad(columnData[0]);
             entity.setTasa(columnData[1].trim());
-            entity.setFecha(new Date());
+            DateTimeFormatter formato = DateTimeFormatter.ofPattern("yyyy-dd-MM");
+            LocalDate fecha = LocalDate.parse(obtenerFechaDelSistema(), formato); 
+            entity.setFecha(fecha);
             log.info("ProductoFinancieroServiceImpl.registrarDepositoPlazoFijoLima.DepositoPlazoFijoLima.getFecha:"
                     + entity.getFecha());
             dao.save(entity);
@@ -64,7 +62,9 @@ public class ProductoFinancieroServiceImpl implements ProductoFinancieroService 
              DepositoPlazoFijoLima entity = new DepositoPlazoFijoLima();
              entity.setEntidad(columnData[0]);
              entity.setTasa(columnData[1].trim());
-             entity.setFecha(new Date());
+             DateTimeFormatter formato = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+             LocalDate fecha = LocalDate.parse(obtenerFechaDelSistema(), formato); 
+             entity.setFecha(fecha);
              listDepositos.add(entity);
              dao.procesar(listDepositos);
          }
@@ -75,36 +75,21 @@ public class ProductoFinancieroServiceImpl implements ProductoFinancieroService 
         return dao.findAll();
     }
     
-    private String obtenerFechaDelSistema() {
-        Calendar localTime = Calendar.getInstance();
-        localTime = new GregorianCalendar(TimeZone.getTimeZone("America/Lima"));
-        localTime.setTimeInMillis(localTime.getTimeInMillis());
-        Date fecha1 = new Date(localTime.getTimeInMillis());
-        SimpleDateFormat isoFormat = new SimpleDateFormat(ProductoFinancieroConstante.STRING_DATE_TIME_FORMATTER);
-        isoFormat.setTimeZone(TimeZone.getTimeZone("UTC-5"));
-        String startDateTime = isoFormat.format(fecha1);
-        return startDateTime;
-    }
-
     @Override
-    public List<DepositoPlazoFijoLima> filtrarFecha(Date fechaInicio,Date fechaFin) {
+    public List<DepositoPlazoFijoLima> filtrarFecha(String fechaInicio, String fechaFin) throws ParseException {
         log.info("ProductoFinancieroServiceImpl.filtrarFecha");
         log.info("FechaInicio :" + fechaInicio);
         log.info("FechaFin :" + fechaFin);
-        List<DepositoPlazoFijoLima> listar = dao.findByFecha(fechaInicio, fechaFin);
-        if(listar!=null) {
-            log.info("entrando al dao >>>>  ");
-            return dao.findByFecha(fechaInicio, fechaFin);
-        }
-        return null;
+        return dao.findByFecha(fechaInicio, fechaFin);
     }
-
-    /*@Override
-    public List<DepositoPlazoFijoLima> filtrarFecha2(Date fechaInicio, Date fechaFin) {
-        
-        return dao.findByFechaInicioAndFechaFin(fechaInicio, fechaFin);
-    }*/
-
-
-
+    
+    private String obtenerFechaDelSistema() {
+        Calendar localTime = Calendar.getInstance();
+        localTime.setTimeInMillis(localTime.getTimeInMillis());
+        Date fecha1 = new Date(localTime.getTimeInMillis());
+        SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String startDateTime = isoFormat.format(fecha1);
+        return startDateTime;
+    }
+    
 }
